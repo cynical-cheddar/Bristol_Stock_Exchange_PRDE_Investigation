@@ -687,7 +687,7 @@ class Trader_PRZI(Trader):
         self.k = k                  # number of sampling points (cf number of arms on a multi-armed-bandit, or pop-size)
         self.theta0 = 100           # threshold-function limit value
         self.m = 4                  # tangent-function multiplier
-        self.strat_wait_time = 720     # how many secs do we give any one strat before switching? //NOTE This has been changed from 7200 to 720
+        self.strat_wait_time = 900     # how many secs do we give any one strat before switching? //NOTE This has been changed from 7200 to 900
         self.strat_range_min = s_min    # lower-bound on randomly-assigned strategy-value
         self.strat_range_max = s_max    # upper-bound on randomly-assigned strategy-value
         self.active_strat = 0       # which of the k strategies are we currently playing? -- start with 0

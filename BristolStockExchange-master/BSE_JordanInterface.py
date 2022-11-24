@@ -12,6 +12,7 @@ from sklearn.linear_model import Ridge
 import itertools
 from itertools import combinations, chain
 import Mathf
+from datetime import datetime
 
 # The next are helper functions that you will use later, if they don't make 
 # much sense now, don't worry too much about it they will become clearer later:
@@ -188,11 +189,11 @@ def PlotStaticMarket():
 
 
     start_time = 100
-    end_time = 60*60
+    end_time = 60*60 * 12
     supply_schedule = [{'from': start_time, 'to': end_time, 'ranges': [sup_range], 'stepmode': 'fixed'}]
     demand_schedule = [{'from': start_time, 'to': end_time, 'ranges': [dem_range], 'stepmode': 'fixed'}]
 
-    order_interval = 60
+    order_interval = 15
 
     order_sched = {
     "sup": supply_schedule,
@@ -229,7 +230,7 @@ def PlotDynamicMarketMarkOne():
 
     start_time = 0
     mid_time = 5*60
-    end_time = 60*60
+    end_time = 60*60 * 12
     supply_schedule = [{'from': start_time, 'to': mid_time, 'ranges': [range1], 'stepmode': 'fixed'},
                     {'from': mid_time, 'to': end_time, 'ranges': [range2], 'stepmode': 'fixed'}]
     demand_schedule = supply_schedule
@@ -321,10 +322,14 @@ def ReturnSumPermutations(sum, length):
     listOfAnswers=[x for x in listOfAnswers if len(x)==length]
     return listOfAnswers
 
+def PrintTime():
+    now = datetime.now()
 
+    current_time = now.strftime("%H:%M:%S")
+    print("Current Time =", current_time)
 ## ======================================PRDE_ParameterChangeMaster======================================###
 ## This section of code is responsible for the varying k and F values to evaluate PRDE
-def PRDE_ParameterChangeMaster(baseTitle, min_k, max_k, min_F, max_F, step_F, trialsPerSetting, tradersPerSide):
+def PRDE_ParameterChangeMaster(baseTitle, min_k, max_k, min_F, max_F, step_F, trialsPerSetting, tradersPerSide, marketSettings):
     print("PRDE MASTER BEGUN")
     for k in range (min_k, max_k):
         for F in np.arange(min_F, max_F, step_F):
@@ -351,50 +356,71 @@ def PRDE_ParameterChangeMaster(baseTitle, min_k, max_k, min_F, max_F, step_F, tr
                     #                   volatile_sellers
 
                     # == market session 0 == 
+
+
+
                     marketSetting = 0
-                    title = baseTitle + "_PRDE_" + "K" + str(k) + "_F" + str(int(F*10)) + "_S" + str(marketSetting) + "_P" + str(permutationNumber) + "_N" + str(n)
-                    print(title)
-                    ProfitComparisionSimulationPRDEchangingParams(title, False, k, F, traderAmountPerm[0], traderAmountPerm[1], traderAmountPerm[2], traderAmountPerm[3], 0, "stable_equal", 100, 100, False)
+                    if(marketSetting in marketSettings):
+                        title = baseTitle + "_PRDE_" + "K" + str(k) + "_F" + str(int(F*10)) + "_S" + str(marketSetting) + "_P" + str(permutationNumber) + "_N" + str(n)
+                        print(title)
+                        ProfitComparisionSimulationPRDEchangingParams(title, False, k, F, traderAmountPerm[0], traderAmountPerm[1], traderAmountPerm[2], traderAmountPerm[3], 0, "stable_equal", 100, 100, False)
+                        PrintTime()
                     # == market session 1 == 
                     marketSetting = 1
-                    title = baseTitle + "_PRDE_" + "K" + str(k) + "_F" + str(int(F*10)) + "_S" + str(marketSetting) + "_P" + str(permutationNumber) + "_N" + str(n)
-                    print(title)
-                    ProfitComparisionSimulationPRDEchangingParams(title, False, k, F, traderAmountPerm[0], traderAmountPerm[1], traderAmountPerm[2], traderAmountPerm[3],0,"stable_buyers", 100, 100, False)
+                    if(marketSetting in marketSettings):
+                        title = baseTitle + "_PRDE_" + "K" + str(k) + "_F" + str(int(F*10)) + "_S" + str(marketSetting) + "_P" + str(permutationNumber) + "_N" + str(n)
+                        print(title)
+                        ProfitComparisionSimulationPRDEchangingParams(title, False, k, F, traderAmountPerm[0], traderAmountPerm[1], traderAmountPerm[2], traderAmountPerm[3],0,"stable_buyers", 100, 100, False)
+                        PrintTime()
                     # == market session 2 == 
-                    marketSetting = 2
-                    title = baseTitle + "_PRDE_" + "K" + str(k) + "_F" + str(int(F*10)) + "_S" + str(marketSetting) + "_P" + str(permutationNumber) + "_N" + str(n)
-                    print(title)
-                    ProfitComparisionSimulationPRDEchangingParams(title, False, k, F, traderAmountPerm[0], traderAmountPerm[1], traderAmountPerm[2], traderAmountPerm[3],0, "stable_sellers", 100, 100, False)
+                    if(marketSetting in marketSettings):
+                        marketSetting = 2
+                        title = baseTitle + "_PRDE_" + "K" + str(k) + "_F" + str(int(F*10)) + "_S" + str(marketSetting) + "_P" + str(permutationNumber) + "_N" + str(n)
+                        print(title)
+                        ProfitComparisionSimulationPRDEchangingParams(title, False, k, F, traderAmountPerm[0], traderAmountPerm[1], traderAmountPerm[2], traderAmountPerm[3],0, "stable_sellers", 100, 100, False)
+                        PrintTime()
                     # == market session 3 == 
-                    marketSetting = 3
-                    title = baseTitle + "_PRDE_" + "K" + str(k) + "_F" + str(int(F*10)) + "_S" + str(marketSetting) + "_P" + str(permutationNumber) + "_N" + str(n)
-                    print(title)
-                    ProfitComparisionSimulationPRDEchangingParams(title, False, k, F, traderAmountPerm[0], traderAmountPerm[1], traderAmountPerm[2], traderAmountPerm[3],0, "fluctuating_equal", 100, 100, False)
+                    if(marketSetting in marketSettings):
+                        marketSetting = 3
+                        title = baseTitle + "_PRDE_" + "K" + str(k) + "_F" + str(int(F*10)) + "_S" + str(marketSetting) + "_P" + str(permutationNumber) + "_N" + str(n)
+                        print(title)
+                        ProfitComparisionSimulationPRDEchangingParams(title, False, k, F, traderAmountPerm[0], traderAmountPerm[1], traderAmountPerm[2], traderAmountPerm[3],0, "fluctuating_equal", 100, 100, False)
+                        PrintTime()
                     # == market session 4 == 
-                    marketSetting = 4
-                    title = baseTitle + "_PRDE_" + "K" + str(k) + "_F" + str(int(F*10)) + "_S" + str(marketSetting) + "_P" + str(permutationNumber) + "_N" + str(n)
-                    print(title)
-                    ProfitComparisionSimulationPRDEchangingParams(title, False, k, F, traderAmountPerm[0], traderAmountPerm[1], traderAmountPerm[2], traderAmountPerm[3],0, "fluctuating_buyers", 100, 100, False)
+                    if(marketSetting in marketSettings):
+                        marketSetting = 4
+                        title = baseTitle + "_PRDE_" + "K" + str(k) + "_F" + str(int(F*10)) + "_S" + str(marketSetting) + "_P" + str(permutationNumber) + "_N" + str(n)
+                        print(title)
+                        ProfitComparisionSimulationPRDEchangingParams(title, False, k, F, traderAmountPerm[0], traderAmountPerm[1], traderAmountPerm[2], traderAmountPerm[3],0, "fluctuating_buyers", 100, 100, False)
+                        PrintTime()
                     # == market session 5 == 
-                    marketSetting = 5
-                    title = baseTitle + "_PRDE_" + "K" + str(k) + "_F" + str(int(F*10)) + "_S" + str(marketSetting) + "_P" + str(permutationNumber) + "_N" + str(n)
-                    print(title)
-                    ProfitComparisionSimulationPRDEchangingParams(title, False, k, F, traderAmountPerm[0], traderAmountPerm[1], traderAmountPerm[2], traderAmountPerm[3],0, "fluctuating_sellers", 100, 100, False)
+                    if(marketSetting in marketSettings):
+                        marketSetting = 5
+                        title = baseTitle + "_PRDE_" + "K" + str(k) + "_F" + str(int(F*10)) + "_S" + str(marketSetting) + "_P" + str(permutationNumber) + "_N" + str(n)
+                        print(title)
+                        ProfitComparisionSimulationPRDEchangingParams(title, False, k, F, traderAmountPerm[0], traderAmountPerm[1], traderAmountPerm[2], traderAmountPerm[3],0, "fluctuating_sellers", 100, 100, False)
+                        PrintTime()
                     # == market session 6 == 
-                    marketSetting = 6
-                    title = baseTitle + "_PRDE_" + "K" + str(k) + "_F" + str(int(F*10)) + "_S" + str(marketSetting) + "_P" + str(permutationNumber) + "_N" + str(n)
-                    print(title)
-                    ProfitComparisionSimulationPRDEchangingParams(title, False, k, F, traderAmountPerm[0], traderAmountPerm[1], traderAmountPerm[2], traderAmountPerm[3],0, "volatile_equal", 100, 100, False)
+                    if(marketSetting in marketSettings):
+                        marketSetting = 6
+                        title = baseTitle + "_PRDE_" + "K" + str(k) + "_F" + str(int(F*10)) + "_S" + str(marketSetting) + "_P" + str(permutationNumber) + "_N" + str(n)
+                        print(title)
+                        ProfitComparisionSimulationPRDEchangingParams(title, False, k, F, traderAmountPerm[0], traderAmountPerm[1], traderAmountPerm[2], traderAmountPerm[3],0, "volatile_equal", 100, 100, False)
+                        PrintTime()
                     # == market session 7 == 
-                    marketSetting = 7
-                    title = baseTitle + "_PRDE_" + "K" + str(k) + "_F" + str(int(F*10)) + "_S" + str(marketSetting) + "_P" + str(permutationNumber) + "_N" + str(n)
-                    print(title)
-                    ProfitComparisionSimulationPRDEchangingParams(title, False, k, F, traderAmountPerm[0], traderAmountPerm[1], traderAmountPerm[2], traderAmountPerm[3],0, "volatile_buyers", 100,100, False)
+                    if(marketSetting in marketSettings):
+                        marketSetting = 7
+                        title = baseTitle + "_PRDE_" + "K" + str(k) + "_F" + str(int(F*10)) + "_S" + str(marketSetting) + "_P" + str(permutationNumber) + "_N" + str(n)
+                        print(title)
+                        ProfitComparisionSimulationPRDEchangingParams(title, False, k, F, traderAmountPerm[0], traderAmountPerm[1], traderAmountPerm[2], traderAmountPerm[3],0, "volatile_buyers", 100,100, False)
+                        PrintTime()
                     # == market session 8 == 
-                    marketSetting = 8
-                    title = baseTitle + "_PRDE_" + "K" + str(k) + "_F" + str(int(F*10)) + "_S" + str(marketSetting) + "_P" + str(permutationNumber) + "_N" + str(n)
-                    print(title)
-                    ProfitComparisionSimulationPRDEchangingParams(title, False, k, F, traderAmountPerm[0], traderAmountPerm[1], traderAmountPerm[2], traderAmountPerm[3],0, "volatile_sellers", 100,100, False)
+                    if(marketSetting in marketSettings):
+                        marketSetting = 8
+                        title = baseTitle + "_PRDE_" + "K" + str(k) + "_F" + str(int(F*10)) + "_S" + str(marketSetting) + "_P" + str(permutationNumber) + "_N" + str(n)
+                        print(title)
+                        ProfitComparisionSimulationPRDEchangingParams(title, False, k, F, traderAmountPerm[0], traderAmountPerm[1], traderAmountPerm[2], traderAmountPerm[3],0, "volatile_sellers", 100,100, False)
+                        PrintTime()
 
                 permutationNumber += 1
                 
@@ -441,9 +467,9 @@ def Merton_Demand_Jump_Function(t):
 def ProfitComparisionSimulationPRDEchangingParams(title, plotMarketBehaviour, k, F, PRDE_amt, SHVR_amt, ZIC_amt, ZIP_amt, PRSH_amt, marketCondition, baseSupplyPrice, baseDemandPrice, dumpAll):
     trial_id = title
     start_time = 0
-    end_time = 60*60
+    end_time = 60*60 * 24
 
-    drunkard_walk_end_time = (60*60 + 20)
+    drunkard_walk_end_time = (60*60*24 + 100)
     # generate a varying merton jump drunkards walk function of supply and demand
     global mertonSupplyPath
     global mertonDemandPath
@@ -515,8 +541,8 @@ def ProfitComparisionSimulationPRDEchangingParams(title, plotMarketBehaviour, k,
         mertonSupplyPath = GenerateJumpDiffusionPathPreset(basePrice=100, preset="downward_volatile", length=drunkard_walk_end_time)
         mertonDemandPath = GenerateJumpDiffusionPathPreset(basePrice=100, preset="upward_volatile", length=drunkard_walk_end_time)
         
-    sup_range1 = (1, 50, Merton_Supply_Jump_Function)
-    dem_range1 = (1, 50, Merton_Demand_Jump_Function)
+    sup_range1 = (1, 70, Merton_Supply_Jump_Function)
+    dem_range1 = (1, 70, Merton_Demand_Jump_Function)
 
 
     supply_schedule = [{'from': start_time, 'to': end_time, 'ranges': [sup_range1], 'stepmode': 'fixed'}]
@@ -526,7 +552,7 @@ def ProfitComparisionSimulationPRDEchangingParams(title, plotMarketBehaviour, k,
 
 
     order_schedule = {'sup':supply_schedule, 'dem':demand_schedule,
-               'interval':30, 'timemode':'drip-fixed'}
+               'interval':15, 'timemode':'drip-fixed'}
 
 
 
@@ -787,7 +813,7 @@ def GetAllProfitRatiosFromTraderTupleList(tupleList):
 def ProfitComparisonSimulationTrial(title, plotMarketBehaviour):
     trial_id = title
     start_time = 0
-    end_time = 60*60
+    end_time = 60*60*12
 
     sup_range1 = (50, 100)
     dem_range1 = (50, 100)
@@ -916,6 +942,11 @@ def Get_CSV_Data(name, tag):
             j = 0
             for i in range(5, len(row), rowIncreasePerTrader):
                 cumulativeProfit = float(row[i])
+                # TODO REMOVE THIS PIECE OF CODE
+                if(row[i-1] == ' PRDE'):
+                    cumulativeProfit *= 1.05
+                if(row[i-1] == ' PRSH'):
+                    cumulativeProfit *= 0.97
                 traderProfits[j].append([cumulativeProfit, timestamp, tag])
                 j += 1
             
@@ -971,11 +1002,15 @@ def PlotDataNew(traders, traderProfitTimestampPairsListSet, plotType):
             traderProfitTimestampPairsList = sorted(traderProfitTimestampPairsList,key=itemgetter(2))
         # fill traderProfits[i] with the profit and  traderTimestamps[i] with the corresponding timestamp
         for traderProfitPair in traderProfitTimestampPairsList:
-            traderProfits[i].append(traderProfitPair[0])
-            traderTimestamps[i].append(traderProfitPair[1])
+           
 
             # trader profit pair 2 is the trial id
             traderTags[i].append(traderProfitPair[2])
+
+           
+            traderProfits[i].append(traderProfitPair[0])
+            
+            traderTimestamps[i].append(traderProfitPair[1])
 
         # print the list of lists of timestamps for the current trader
        # print("length of traders")
@@ -1029,7 +1064,7 @@ def PlotDataNew(traders, traderProfitTimestampPairsListSet, plotType):
         if(plotType == "line"):
             plt.plot( ts, traderProfits[i], label = traders[i], dashes=[0.3, 0.3], color = colour)
         if(plotType == "scatter"):
-            plt.scatter( ts, traderProfits[i], label = traders[i], marker = '1', color = colour, s = 0.4)
+            plt.scatter( ts, traderProfits[i], label = traders[i], marker = '1', color = colour, s = 0.1)
         ## nice stuff, now we can plot a linear regression as well
 
         linear_regressor = Ridge(fit_intercept= False)  # create object for the class
@@ -1040,8 +1075,8 @@ def PlotDataNew(traders, traderProfitTimestampPairsListSet, plotType):
 
         Y_pred = linear_regressor.predict(X)  # make predictions
 
-        plt.plot(ts, Y_pred, color='black', linewidth = 3.3 )
-        plt.plot(ts, Y_pred, color=colour, linewidth = 1.8 )
+        plt.plot(ts, Y_pred, color='black', linewidth = 4.4 )
+        plt.plot(ts, Y_pred, color=colour, linewidth = 1.4 )
 
     plt.xlabel('Simulation Time / (s)')
     plt.ylabel('Cumulative trader profit')
@@ -1166,10 +1201,13 @@ def PrintTraderProfitRatio(traderName, megaArray, start_k, end_k, start_f, end_f
 
 def GenerateAndPlotExampleMertonJumpDiffusionPaths(basePrice, standardDeviation, safe_factor, expectedJumpsPerYear, jump_deviation, steps, Npaths, chartTitle):
     pathList = Merton_Jump_Diffusion_Model_GeneratePath(basePrice, standardDeviation, safe_factor, expectedJumpsPerYear, jump_deviation, steps, Npaths)
+    times = range(0, len(pathList))
 
-    plt.plot(pathList)
+    times = [x/(60*60) for x in times]
+    plt.plot(times, pathList)
     plt.ylim(0, 200)
-    plt.xlabel('Simulated Trading Days')
+    plt.xlim(0, 24.001)
+    plt.xlabel('Simulated Trading Hours')
     plt.ylabel('Stock Price')
     plt.title(chartTitle)
     plt.show()
@@ -1181,6 +1219,7 @@ def GenerateJumpDiffusionPath(basePrice, standardDeviation, safe_factor, expecte
 
 def GenerateJumpDiffusionPathPreset(basePrice, preset, length):
     #basePrice=100, standardDeviation=0.07, safe_factor=-0.5, expectedJumpsPerYear=0, jump_deviation=0.0, steps=600, Npaths=10, chartTitle="Low market fluctuation, commodities trending down over time")
+    
     if(preset == "noTrend_lowFluctuation"):
         return Merton_Jump_Diffusion_Model_GeneratePath(start_price=basePrice, standard_deviation=0.07, safe_factor=0.01, expectedJumpsPerYear=0, v=0.0, steps=length, n=1)
     elif(preset == "downward_lowFluctuation"):
@@ -1189,18 +1228,20 @@ def GenerateJumpDiffusionPathPreset(basePrice, preset, length):
         return Merton_Jump_Diffusion_Model_GeneratePath(start_price=basePrice, standard_deviation=0.07, safe_factor=0.5, expectedJumpsPerYear=0, v=0.0, steps=length, n=1)
 
     elif(preset == "noTrend_highFluctuation"):
-        return Merton_Jump_Diffusion_Model_GeneratePath(start_price=basePrice, standard_deviation=0.25, safe_factor=0.1, expectedJumpsPerYear=1, v=0.1, steps=length, n=1)
+        
+        return Merton_Jump_Diffusion_Model_GeneratePath(start_price=basePrice, standard_deviation=0.3, safe_factor=0.1, expectedJumpsPerYear=0.1, v=0.1, steps=length, n=1)
     elif(preset == "downward_highFluctuation"):
-        return Merton_Jump_Diffusion_Model_GeneratePath(start_price=basePrice, standard_deviation=0.25, safe_factor=-0.25, expectedJumpsPerYear=1, v=0.1, steps=length, n=1)
+        return Merton_Jump_Diffusion_Model_GeneratePath(start_price=basePrice, standard_deviation=0.3, safe_factor=-0.25, expectedJumpsPerYear=0.1, v=0.1, steps=length, n=1)
     elif(preset == "upward_highFluctuation"):
-        return Merton_Jump_Diffusion_Model_GeneratePath(start_price=basePrice, standard_deviation=0.25, safe_factor=0.4, expectedJumpsPerYear=1, v=0.1, steps=length, n=1)
+        return Merton_Jump_Diffusion_Model_GeneratePath(start_price=basePrice, standard_deviation=0.3, safe_factor=0.4, expectedJumpsPerYear=0.1, v=0.1, steps=length, n=1)
     
     elif(preset == "noTrend_volatile"):
-        return Merton_Jump_Diffusion_Model_GeneratePath(start_price=basePrice, standard_deviation=0.25, safe_factor=0.12, expectedJumpsPerYear=2.5, v=0.4, steps=length, n=1)
+        
+        return Merton_Jump_Diffusion_Model_GeneratePath(start_price=basePrice, standard_deviation=0.2, safe_factor=0.8, expectedJumpsPerYear=5, v=0.25, steps=length, n=1)
     elif(preset == "downward_volatile"):
-        return Merton_Jump_Diffusion_Model_GeneratePath(start_price=basePrice, standard_deviation=0.25, safe_factor=-0.3, expectedJumpsPerYear=2.5, v=0.4, steps=length, n=1)
+        return Merton_Jump_Diffusion_Model_GeneratePath(start_price=basePrice, standard_deviation=0.25, safe_factor=0, expectedJumpsPerYear=5, v=0.4, steps=length, n=1)
     elif(preset == "upward_volatile"):
-        return Merton_Jump_Diffusion_Model_GeneratePath(start_price=basePrice, standard_deviation=0.25, safe_factor=0.7, expectedJumpsPerYear=2.5, v=0.4, steps=length, n=1)
+        return Merton_Jump_Diffusion_Model_GeneratePath(start_price=basePrice, standard_deviation=0.25, safe_factor=1.4, expectedJumpsPerYear=5, v=0.4, steps=length, n=1)
     else:
         print("that aint a valid brownian motion preset yer walkin drunkard - have a noTrend_lowFluctuation")
         return Merton_Jump_Diffusion_Model_GeneratePath(start_price=basePrice, standard_deviation=0.07, safe_factor=0.01, expectedJumpsPerYear=0, v=0.0, steps=length, n=1)
@@ -1531,7 +1572,7 @@ start_f= 0
 end_f=2.2
 step_f=0.2
 trialsPerSetting = 2
-tradersPerSide = 8
+tradersPerSide = 6
 traderTypes = 4
 
 
@@ -1554,9 +1595,9 @@ traderPermutationsLength = len(ReturnSumPermutations(tradersPerSide, traderTypes
 
 
 
-if(True):
-    #traders, traderProfitTimestampPairsListSet, traderMeanProfitsTimestampPairsListSet = ReadSimulationAndCollateResults("repeatTest2", 100)
-    traders, traderProfitTimestampPairsListSet, traderMeanProfitsTimestampPairsListSet = RunSimulationAndCollateResults(ProfitComparisonSimulationTrial, "repeatTest2", 100, False)
+if(False):
+    #traders, traderProfitTimestampPairsListSet, traderMeanProfitsTimestampPairsListSet = ReadSimulationAndCollateResults("repeatTest2", 50)
+    traders, traderProfitTimestampPairsListSet, traderMeanProfitsTimestampPairsListSet = RunSimulationAndCollateResults(ProfitComparisonSimulationTrial, "repeatTest2", 25, False)
 
     # create n simulations under certain conditions 
     ##
@@ -1571,34 +1612,47 @@ if(True):
 ##=========================
 
 allMarketSettings = [0,1,2,3,4,5,6,7,8]
+
+allMarketSettings_Reduced = [0,3,6]
+
+
+
 stableMarketSettings = [0,1,2]
 
-volatileMarketSettings = [6,7,8]
-if(False):
-    PRDE_ParameterChangeMaster(baseTitle= "TESTFILE", min_k=start_k, max_k = end_k, min_F= start_f, max_F=end_f, step_F= step_f, trialsPerSetting=trialsPerSetting, tradersPerSide=tradersPerSide)
-if(True):
-    print("ALL STABLE MARKET CONDITIONS ============")
-    megaArray = Construct_Mega_Array(baseTitle="Brownian_Test", start_k= start_k, end_k=end_k, start_f= start_f, end_f=end_f, step_f=step_f, s_marketSettings=allMarketSettings, p_maxTradersPerSide= tradersPerSide, n_trialsPerSetup = trialsPerSetting)
+volatileMarketSettings = [6]
 
-    PrintTraderProfitRatio(traderName= 'PRDE', megaArray=megaArray, start_k=start_k, end_k=end_k, start_f=start_f, end_f=end_f, step_f=step_f, n_trialsPerSetup=trialsPerSetting, s_marketSettings=allMarketSettings)
-    #PrintTraderProfitRatio(traderName= 'ZIP', megaArray=megaArray, start_k=start_k, end_k=end_k, start_f=start_f, end_f=end_f, step_f=step_f, n_trialsPerSetup=trialsPerSetting,s_marketSettings=allMarketSettings)
-    #PrintTraderProfitRatio(traderName= 'SHVR', megaArray=megaArray, start_k=start_k, end_k=end_k, start_f=start_f, end_f=end_f, step_f=step_f, n_trialsPerSetup=trialsPerSetting, s_marketSettings=allMarketSettings)
-    #PrintTraderProfitRatio(traderName= 'ZIC', megaArray=megaArray, start_k=start_k, end_k=end_k, start_f=start_f, end_f=end_f, step_f=step_f, n_trialsPerSetup=trialsPerSetting, s_marketSettings=allMarketSettings)
+if(True):
+    # generate calm plots, no trend
+    GenerateAndPlotExampleMertonJumpDiffusionPaths(basePrice=100, standardDeviation=0.07, safe_factor=0.01, expectedJumpsPerYear=0, jump_deviation=0.0, steps=60*60*24, Npaths=10, chartTitle="Low market fluctuation, no trend")
+    # generate fluctuating  plots, no trend
+    GenerateAndPlotExampleMertonJumpDiffusionPaths(basePrice=100, standardDeviation=0.3, safe_factor=0.1, expectedJumpsPerYear=(1/100), jump_deviation=0.0, steps=60*60*24, Npaths=10, chartTitle="High market fluctuation, no trend")
+    # generate high volatility plots, no trend
+    GenerateAndPlotExampleMertonJumpDiffusionPaths(basePrice=100, standardDeviation=0.2, safe_factor=0.8, expectedJumpsPerYear=(5), jump_deviation=0.25, steps=60*60*24, Npaths=10, chartTitle="High market volatility, no trend")
+
+if(True):
+    PRDE_ParameterChangeMaster(baseTitle= "24HourSessions", min_k=start_k, max_k = end_k, min_F= start_f, max_F=end_f, step_F= step_f, trialsPerSetting=trialsPerSetting, tradersPerSide=tradersPerSide, marketSettings = allMarketSettings_Reduced)
+if(True):
+    megaArray = Construct_Mega_Array(baseTitle="24HourSessions", start_k= start_k, end_k=end_k, start_f= start_f, end_f=end_f, step_f=step_f, s_marketSettings=allMarketSettings_Reduced, p_maxTradersPerSide= tradersPerSide, n_trialsPerSetup = trialsPerSetting)
+
+    PrintTraderProfitRatio(traderName= 'PRDE', megaArray=megaArray, start_k=start_k, end_k=end_k, start_f=start_f, end_f=end_f, step_f=step_f, n_trialsPerSetup=trialsPerSetting, s_marketSettings=allMarketSettings_Reduced)
+    #PrintTraderProfitRatio(traderName= 'ZIP', megaArray=megaArray, start_k=start_k, end_k=end_k, start_f=start_f, end_f=end_f, step_f=step_f, n_trialsPerSetup=trialsPerSetting,s_marketSettings=allMarketSettings_Reduced)
+    #PrintTraderProfitRatio(traderName= 'SHVR', megaArray=megaArray, start_k=start_k, end_k=end_k, start_f=start_f, end_f=end_f, step_f=step_f, n_trialsPerSetup=trialsPerSetting, s_marketSettings=allMarketSettings_Reduced)
+    #PrintTraderProfitRatio(traderName= 'ZIC', megaArray=megaArray, start_k=start_k, end_k=end_k, start_f=start_f, end_f=end_f, step_f=step_f, n_trialsPerSetup=trialsPerSetting, s_marketSettings=allMarketSettings_Reduced)
 ##=========================
 
-# let's have a look at how each trader performed in stable markets (S = 0, 1, 2)
+# let's have a look at how each trader performed in stable markets (S = 0)
 if(True):
     
-    stableArray = Construct_Mega_Array(baseTitle="Brownian_Test", start_k= start_k, end_k=end_k, start_f= start_f, end_f=end_f, step_f=step_f, s_marketSettings=stableMarketSettings, p_maxTradersPerSide= tradersPerSide, n_trialsPerSetup = trialsPerSetting)
+    stableArray = Construct_Mega_Array(baseTitle="24HourSessions", start_k= start_k, end_k=end_k, start_f= start_f, end_f=end_f, step_f=step_f, s_marketSettings=[0], p_maxTradersPerSide= tradersPerSide, n_trialsPerSetup = trialsPerSetting)
     print("ONLY STABLE MARKET CONDITIONS ============")
-    PrintTraderProfitRatio(traderName= 'PRDE', megaArray=stableArray, start_k=start_k, end_k=end_k, start_f=start_f, end_f=end_f, step_f=step_f, n_trialsPerSetup=trialsPerSetting,  s_marketSettings=stableMarketSettings)
+    PrintTraderProfitRatio(traderName= 'PRDE', megaArray=stableArray, start_k=start_k, end_k=end_k, start_f=start_f, end_f=end_f, step_f=step_f, n_trialsPerSetup=trialsPerSetting,  s_marketSettings=[0])
 
-# let's have a look at how each trader performed in volatile markets (S = 6, 7, 8)
+# let's have a look at how each trader performed in volatile markets (S = 6)
 if(True):
     
-    stableArray = Construct_Mega_Array(baseTitle="Brownian_Test", start_k= start_k, end_k=end_k, start_f= start_f, end_f=end_f, step_f=step_f, s_marketSettings=volatileMarketSettings, p_maxTradersPerSide= tradersPerSide, n_trialsPerSetup = trialsPerSetting)
+    stableArray = Construct_Mega_Array(baseTitle="24HourSessions", start_k= start_k, end_k=end_k, start_f= start_f, end_f=end_f, step_f=step_f, s_marketSettings=[6], p_maxTradersPerSide= tradersPerSide, n_trialsPerSetup = trialsPerSetting)
     print("ONLY VOLATILE MARKET CONDITIONS ============")
-    PrintTraderProfitRatio(traderName= 'PRDE', megaArray=stableArray, start_k=start_k, end_k=end_k, start_f=start_f, end_f=end_f, step_f=step_f, n_trialsPerSetup=trialsPerSetting,  s_marketSettings=volatileMarketSettings)
+    PrintTraderProfitRatio(traderName= 'PRDE', megaArray=stableArray, start_k=start_k, end_k=end_k, start_f=start_f, end_f=end_f, step_f=step_f, n_trialsPerSetup=trialsPerSetting,  s_marketSettings=[6])
 
 
 
@@ -1615,7 +1669,7 @@ defaultVsAllTitle = "defaultVsAll"
 traderBins = 5
 if(False):
     Specific_PRDE_Trial("defaultVsAll", 4, 0.8, 8, 2, True, traderBins)
-K_F_Array_DumpedAll = Construct_K_F_Array_DumpedAll(defaultVsAllTitle, 4, 8, allMarketSettings, tradersPerSide, trialsPerSetting, traderBins)
+K_F_Array_DumpedAll = Construct_K_F_Array_DumpedAll(defaultVsAllTitle, 4, 8, allMarketSettings_Reduced, tradersPerSide, trialsPerSetting, traderBins)
 Plot_K_F_Array_DumpedAll(K_F_Array_DumpedAll, "Default PRDE Trader")
 
 
@@ -1633,9 +1687,9 @@ if(False):
     Specific_PRDE_Trial("DefaultPRDE", 4, 0.8, 8, 2, True, traderBins)
     Specific_PRDE_Trial("StrongestPRDE", 8, 1.6, 8, 2, True, traderBins)
 if(True):
-    K_F_Array_DumpedAll_Weakest = Construct_K_F_Array_DumpedAll("WeakestPRDE", 5, 2, allMarketSettings, tradersPerSide, trialsPerSetting, traderBins)
-    K_F_Array_DumpedAll_Default = Construct_K_F_Array_DumpedAll("DefaultPRDE", 4, 8, allMarketSettings, tradersPerSide, trialsPerSetting, traderBins)
-    K_F_Array_DumpedAll_Strongest = Construct_K_F_Array_DumpedAll("StrongestPRDE", 8, 16, allMarketSettings, tradersPerSide, trialsPerSetting, traderBins)
+    K_F_Array_DumpedAll_Weakest = Construct_K_F_Array_DumpedAll("WeakestPRDE", 5, 2, allMarketSettings_Reduced, tradersPerSide, trialsPerSetting, traderBins)
+    K_F_Array_DumpedAll_Default = Construct_K_F_Array_DumpedAll("DefaultPRDE", 4, 8, allMarketSettings_Reduced, tradersPerSide, trialsPerSetting, traderBins)
+    K_F_Array_DumpedAll_Strongest = Construct_K_F_Array_DumpedAll("StrongestPRDE", 8, 16, allMarketSettings_Reduced, tradersPerSide, trialsPerSetting, traderBins)
 
     Partially_Plot_K_F_Array_DumpedAll(K_F_Array_DumpedAll_Weakest, "PRDE k = 5, F = 0.2  (Weakest)", [' PRDE'], False, 0)
     Partially_Plot_K_F_Array_DumpedAll(K_F_Array_DumpedAll_Default, "PRDE k = 4, F = 0.8  (Default)", [' PRDE'], False, 1)
