@@ -12,7 +12,8 @@
 #
 # Copyright (c) 2012-2022, Dave Cliff
 #
-#
+# bse replace
+
 # ------------------------
 #
 # MIT Open-Source License:
@@ -658,36 +659,27 @@ class Trader_PRZI(Trader):
     def __init__(self, ttype, tid, balance, params, time):
         # if params == "landscape-mapper" then it generates data for mapping the fitness landscape
 
-        verbose = True
+        #verbose = True
 
         Trader.__init__(self, ttype, tid, balance, params, time)
 
         # unpack the params
-        # for all three of PRZI, PRSH, and PRDE params can include strat_min and strat_max
-        # for PRSH and PRDE params should include values for optimizer and k
-        # if no params specified then defaults to PRZI with strat values in [-1.0,+1.0]
-
-        # default parameter values
-        k = 1
-        optimizer = None # no optimizer => plain non-adaptive PRZI
-        s_min = -1.0
-        s_max = +1.0
-        
-        # did call provide different params?
         if type(params) is dict:
-            if 'k' in params:
-                k = params['k']
-            if 'optimizer' in params:
-                optimizer = params['optimizer']
+            k = params['k']
+            optimizer = params['optimizer']
             s_min = params['strat_min']
             s_max = params['strat_max']
-            F = params['F']
-        
+            diffVol = params['diffVol']
+        else:
+            optimizer = None
+            s_min = 0.0
+            s_max = 0.0
+
         self.optmzr = optimizer     # this determines whether it's PRZI, PRSH, or PRDE
         self.k = k                  # number of sampling points (cf number of arms on a multi-armed-bandit, or pop-size)
         self.theta0 = 100           # threshold-function limit value
         self.m = 4                  # tangent-function multiplier
-        self.strat_wait_time = 720     # how many secs do we give any one strat before switching? //NOTE This has been changed from 7200 to 720
+        self.strat_wait_time = 720     # how many secs do we give any one strat before switching? ## THIS HAS BEEN CHANGED to 720 seconds
         self.strat_range_min = s_min    # lower-bound on randomly-assigned strategy-value
         self.strat_range_max = s_max    # upper-bound on randomly-assigned strategy-value
         self.active_strat = 0       # which of the k strategies are we currently playing? -- start with 0
@@ -700,12 +692,9 @@ class Trader_PRZI(Trader):
         self.pmax_c_i = math.sqrt(random.randint(1,10))  # multiplier coefficient when estimating p_max
         self.mapper_outfile = None
         # differential evolution parameters all in one dictionary
-        self.diffevol = {'de_state': 'active_s0',          # initial state: strategy 0 is active (being evaluated)
-                         's0_index': self.active_strat,    # s0 starts out as active strat
-                         'snew_index': self.k,             # (k+1)th item of strategy list is DE's new strategy
-                         'snew_stratval': None,            # assigned later
-                         'F': F                          # differential weight -- usually between 0 and 2
-        }
+        self.diffevol = diffVol
+        #print(self.diffevol)
+        #print(" k = " + str(self.k))
 
         start_time = time
         profit = 0.0
@@ -714,10 +703,9 @@ class Trader_PRZI(Trader):
         lut_ask = None
 
         for s in range(self.k + 1):
-            # initialise each of the strategies in sequence: 
-            # for PRZI: only one strategy is needed
-            # for PRSH, one random initial strategy, then k-1 mutants of that initial strategy
-            # for PRDE, use draws from uniform distbn over whole range and a (k+1)th strategy is needed to hold s_new
+            # initialise each of the strategies in sequence: for PRSH, one random seed, then k-1 mutants of that seed
+            # for PRDE, use draws from uniform distbn over whole range
+            # the (k+1)th strategy is needed to hold s_new in differential evolution; it's not used in SHC.
             if s == 0:
                 strategy = random.uniform(self.strat_range_min, self.strat_range_max)
             else:
@@ -728,16 +716,9 @@ class Trader_PRZI(Trader):
                     # differential evolution: seed initial strategies across whole space
                     strategy = self.mutate_strat(self.strats[0]['stratval'], 'uniform_bounded_range')
                 else:
-                    # PRZI -- do nothing
-                    pass
+                    sys.exit('bad self.optmzr when initializing PRZI strategies')
             self.strats.append({'stratval': strategy, 'start_t': start_time,
                                 'profit': profit, 'pps': profit_per_second, 'lut_bid': lut_bid, 'lut_ask': lut_ask})
-            if self.optmzr is None:
-                # PRZI -- so we stop after one iteration
-                break
-            elif self.optmzr == 'PRSH' and s == self.k - 1:
-                # PRSH -- doesn't need the (k+1)th strategy
-                break
 
         if self.params == 'landscape-mapper':
             # replace seed+mutants set of strats with regularly-spaced strategy values over the whole range
@@ -799,6 +780,9 @@ class Trader_PRZI(Trader):
             epsilon = 0.000001 #used to catch DIV0 errors
             verbose = False
 
+            if(pmax <= pmin):
+                pmax = pmin
+                print("pmax too low, this is not ideal. Mitigate.")
             if (strat > 1.0) or (strat < -1.0):
                 # out of range
                 sys.exit('PRSH FAIL: strat=%f out of range\n' % strat)
@@ -809,9 +793,7 @@ class Trader_PRZI(Trader):
 
             if pmax < pmin:
                 # screwed
-                pmax = pmin + 0.001
-                print("pmax below pmin, mitigate")
-               # sys.exit('PRSH FAIL: pmax %f < pmin %f \n' % (pmax, pmin))
+                sys.exit('PRSH FAIL: pmax %f < pmin %f \n' % (pmax, pmin))
 
             if verbose:
                 print('PRSH calc_cdf_lut: strat=%f dirn=%d pmin=%d pmax=%d\n' % (strat, dirn, pmin, pmax))
@@ -1601,13 +1583,13 @@ def populate_market(traders_spec, traders, shuffle, verbose):
                 # params determines type of optimizer used
                 if ttype == 'PRSH':
                     parameters = {'optimizer': 'PRSH', 'k': trader_params['k'],
-                                  'strat_min': trader_params['s_min'], 'strat_max': trader_params['s_max'], 'F':trader_params['F']}
+                                  'strat_min': trader_params['s_min'], 'strat_max': trader_params['s_max'], 'diffVol': trader_params['diffVolDict']}
                 elif ttype == 'PRDE':
                     parameters = {'optimizer': 'PRDE', 'k': trader_params['k'],
-                                  'strat_min': trader_params['s_min'], 'strat_max': trader_params['s_max'], 'F':trader_params['F']}
+                                  'strat_min': trader_params['s_min'], 'strat_max': trader_params['s_max'], 'diffVol': trader_params['diffVolDict']}
                 else: # ttype=PRZI
                     parameters = {'optimizer': None, 'k': 1,
-                                  'strat_min': trader_params['s_min'], 'strat_max': trader_params['s_max'], 'F':trader_params['F']}
+                                  'strat_min': trader_params['s_min'], 'strat_max': trader_params['s_max']}
 
         return parameters
 
@@ -1929,7 +1911,9 @@ def market_session(sess_id, starttime, endtime, trader_spec, order_schedule, avg
     bookkeep_verbose = False
     populate_verbose = False
 
-    strat_dump = open(sess_id + '_strats.csv', 'w')
+    do_strat_dump = False
+    if(do_strat_dump):
+        strat_dump = open(sess_id + '_strats.csv', 'w')
 
     lobframes = open(sess_id + '_LOB_frames.csv', 'w')
     lobframes = None # this disables writing of the LOB frames (which can generate HUGE files)
@@ -2015,20 +1999,21 @@ def market_session(sess_id, starttime, endtime, trader_spec, order_schedule, avg
 
             if int(time) % frame_rate == 0 and int(time) not in frames_done:
                 # print one more frame to strategy dumpfile
-                dump_strats_frame(time, strat_dump, traders)
+                if(do_strat_dump):
+                    dump_strats_frame(time, strat_dump, traders)
                 # record that we've written this frame
                 frames_done.add(int(time))
 
         time = time + timestep
 
     # session has ended
-
-    strat_dump.close()
+    if(do_strat_dump):
+        strat_dump.close()
 
     if lobframes is not None:
             lobframes.close()
 
-    dump_all = True
+    dump_all = False
 
     if dump_all:
 

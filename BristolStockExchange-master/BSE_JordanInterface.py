@@ -188,7 +188,7 @@ def PlotStaticMarket():
 
 
     start_time = 100
-    end_time = 600
+    end_time = 60*60
     supply_schedule = [{'from': start_time, 'to': end_time, 'ranges': [sup_range], 'stepmode': 'fixed'}]
     demand_schedule = [{'from': start_time, 'to': end_time, 'ranges': [dem_range], 'stepmode': 'fixed'}]
 
@@ -229,7 +229,7 @@ def PlotDynamicMarketMarkOne():
 
     start_time = 0
     mid_time = 5*60
-    end_time = 10*60
+    end_time = 60*60
     supply_schedule = [{'from': start_time, 'to': mid_time, 'ranges': [range1], 'stepmode': 'fixed'},
                     {'from': mid_time, 'to': end_time, 'ranges': [range2], 'stepmode': 'fixed'}]
     demand_schedule = supply_schedule
@@ -441,9 +441,9 @@ def Merton_Demand_Jump_Function(t):
 def ProfitComparisionSimulationPRDEchangingParams(title, plotMarketBehaviour, k, F, PRDE_amt, SHVR_amt, ZIC_amt, ZIP_amt, PRSH_amt, marketCondition, baseSupplyPrice, baseDemandPrice, dumpAll):
     trial_id = title
     start_time = 0
-    end_time = 600
+    end_time = 60*60
 
-    drunkard_walk_end_time = 620
+    drunkard_walk_end_time = (60*60 + 20)
     # generate a varying merton jump drunkards walk function of supply and demand
     global mertonSupplyPath
     global mertonDemandPath
@@ -530,14 +530,9 @@ def ProfitComparisionSimulationPRDEchangingParams(title, plotMarketBehaviour, k,
 
 
 
-    PRDR_Setup_F_dict =  {'de_state': 'active_s0',           # initial state: strategy 0 is active (being evaluated)
-                         's0_index': 0,                      # s0 starts out as active strat
-                         'snew_index': k,                    # (k+1)th item of strategy list is DE's new strategy
-                         'snew_stratval': None,              # assigned later
-                         'F': F                              # differential weight -- usually between 0 and 2
-        }
 
-    buyers_spec = [('PRDE', PRDE_amt, {'k': k, 's_min': -1.0, 's_max': +1.0, 'diffVolDict':PRDR_Setup_F_dict}),('SHVR',SHVR_amt), ('ZIC', ZIC_amt), ('ZIP', ZIP_amt), ('PRSH', PRSH_amt, {'k': k, 's_min': -1.0, 's_max': +1.0, 'diffVolDict':PRDR_Setup_F_dict})]
+
+    buyers_spec = [('PRDE', PRDE_amt, {'k': k, 's_min': -1.0, 's_max': +1.0, 'F':F}),('SHVR',SHVR_amt), ('ZIC', ZIC_amt), ('ZIP', ZIP_amt), ('PRSH', PRSH_amt, {'k': k, 's_min': -1.0, 's_max': +1.0, 'F':F})]
 
     sellers_spec = buyers_spec
     traders_spec = {'sellers':sellers_spec, 'buyers':buyers_spec}
@@ -792,7 +787,7 @@ def GetAllProfitRatiosFromTraderTupleList(tupleList):
 def ProfitComparisonSimulationTrial(title, plotMarketBehaviour):
     trial_id = title
     start_time = 0
-    end_time = 600
+    end_time = 60*60
 
     sup_range1 = (50, 100)
     dem_range1 = (50, 100)
@@ -817,7 +812,7 @@ def ProfitComparisonSimulationTrial(title, plotMarketBehaviour):
 
 
 
-    buyers_spec = [('PRDE', 4, {'k': 4, 's_min': -1.0, 's_max': +1.0, 'diffVolDict':PRDR_Setup_F_dict}),('SHVR',4),('ZIC',4),('ZIP',4), ('PRSH', 4, {'k': 4, 's_min': -1.0, 's_max': +1.0, 'diffVolDict':PRDR_Setup_F_dict})]
+    buyers_spec = [('PRDE', 4, {'k': 4, 's_min': -1.0, 's_max': +1.0, 'F':0.8}),('SHVR',4),('ZIC',4),('ZIP',4), ('PRSH', 4, {'k': 4, 's_min': -1.0, 's_max': +1.0, 'F':0.8})]
 
     sellers_spec = buyers_spec
     traders_spec = {'sellers':sellers_spec, 'buyers':buyers_spec}
@@ -1496,19 +1491,13 @@ def Partially_Plot_K_F_Array_DumpedAll(K_F_array, PRDE_OverrideName, validTrader
 # all these lists should be of the same unflattened length
 
 ##
-#traders, traderProfitTimestampPairsListSet, traderMeanProfitsTimestampPairsListSet = RunSimulationAndCollateResults(ProfitComparisonSimulationTrial, "repeatTest2", 100, False)
+#
 
 ## for all sensible values of k (4 - 16)
 ##      for all values of (0, 2 - step 0.4)
 ##          Run simulations with only endpoints being interesting 
 
 
-if(False):
-    traders, traderProfitTimestampPairsListSet, traderMeanProfitsTimestampPairsListSet = ReadSimulationAndCollateResults("repeatTest2", 100)
-
-    # create n simulations under certain conditions 
-    ##
-    PlotDataNew(traders, traderProfitTimestampPairsListSet, 'scatter')
 
 
 
@@ -1563,35 +1552,15 @@ traderPermutationsLength = len(ReturnSumPermutations(tradersPerSide, traderTypes
 #Npaths = number of paths to simulate
 #sigma =  annaul standard deviation , for weiner process
 
-# generate calm plots, no trend
-#GenerateAndPlotExampleMertonJumpDiffusionPaths(basePrice=100, standardDeviation=0.07, safe_factor=0.01, expectedJumpsPerYear=0, jump_deviation=0.0, steps=600, Npaths=10, chartTitle="Low market fluctuation, no trend")
 
-# generate calm plots, trend down
-#GenerateAndPlotExampleMertonJumpDiffusionPaths(basePrice=100, standardDeviation=0.07, safe_factor=-0.5, expectedJumpsPerYear=0, jump_deviation=0.0, steps=600, Npaths=10, chartTitle="Low market fluctuation, commodities trending down over time")
 
-# generate calm plots, trend up
-#GenerateAndPlotExampleMertonJumpDiffusionPaths(basePrice=100, standardDeviation=0.07, safe_factor=0.5, expectedJumpsPerYear=0, jump_deviation=0.0, steps=600, Npaths=10, chartTitle="Low market fluctuation, commodities trending up over time")
+if(True):
+    #traders, traderProfitTimestampPairsListSet, traderMeanProfitsTimestampPairsListSet = ReadSimulationAndCollateResults("repeatTest2", 100)
+    traders, traderProfitTimestampPairsListSet, traderMeanProfitsTimestampPairsListSet = RunSimulationAndCollateResults(ProfitComparisonSimulationTrial, "repeatTest2", 100, False)
 
-# generate medium volatility plots, no trend
-#GenerateAndPlotExampleMertonJumpDiffusionPaths(basePrice=100, standardDeviation=0.25, safe_factor=0.1, expectedJumpsPerYear=1, jump_deviation=0.0, steps=600, Npaths=10, chartTitle="High market fluctuation, no trend")
-
-# generate medium volatility plots, trend down
-#GenerateAndPlotExampleMertonJumpDiffusionPaths(basePrice=100, standardDeviation=0.25, safe_factor=-0.25, expectedJumpsPerYear=1, jump_deviation=0.1, steps=600, Npaths=10, chartTitle="High market fluctuation, commodities trending down over time")
-
-# generate medium volatility plots, trend up
-#GenerateAndPlotExampleMertonJumpDiffusionPaths(basePrice=100, standardDeviation=0.25, safe_factor=0.4, expectedJumpsPerYear=1, jump_deviation=0.1, steps=600, Npaths=10, chartTitle="High market fluctuation, commodities trending up over time")
-
-# generate high volatility plots, no trend
-#GenerateAndPlotExampleMertonJumpDiffusionPaths(basePrice=100, standardDeviation=0.2, safe_factor=0.1, expectedJumpsPerYear=2.5, jump_deviation=0.4, steps=600, Npaths=10, chartTitle="High market volatility, no trend")
-
-# generate high volatility plots, trend down
-#GenerateAndPlotExampleMertonJumpDiffusionPaths(basePrice=100, standardDeviation=0.2, safe_factor=-0.25, expectedJumpsPerYear=2.5, jump_deviation=0.4, steps=600, Npaths=10, chartTitle="High market volatility, commodities trending down over time")
-
-# generate high volatility plots, trend up
-#GenerateAndPlotExampleMertonJumpDiffusionPaths(basePrice=100, standardDeviation=0.2, safe_factor=0.7, expectedJumpsPerYear=2.5, jump_deviation=0.4, steps=600, Npaths=10, chartTitle="High market volatility, commodities trending up over time")
-
-# calculate test merton jump diffusion model
-
+    # create n simulations under certain conditions 
+    ##
+    PlotDataNew(traders, traderProfitTimestampPairsListSet, 'scatter')
 
 
 ## run some test market simulations and plot the market conditions, as well as supply and demand curves
